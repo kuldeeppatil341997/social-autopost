@@ -1,0 +1,23 @@
+name: Check setup
+on: workflow_dispatch
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/check.mjs
+        env:
+          # Only the secrets the channels in channels.json use. Add a channel's secret names here too.
+          KAALCHITRA_IG_USER_ID: ${{ secrets.KAALCHITRA_IG_USER_ID }}
+          KAALCHITRA_IG_TOKEN: ${{ secrets.KAALCHITRA_IG_TOKEN }}
+          KAALCHITRA_YT_CLIENT_ID: ${{ secrets.KAALCHITRA_YT_CLIENT_ID }}
+          KAALCHITRA_YT_CLIENT_SECRET: ${{ secrets.KAALCHITRA_YT_CLIENT_SECRET }}
+          KAALCHITRA_YT_REFRESH_TOKEN: ${{ secrets.KAALCHITRA_YT_REFRESH_TOKEN }}
+          BEHIND_EVERYTHING_IG_USER_ID: ${{ secrets.BEHIND_EVERYTHING_IG_USER_ID }}
+          BEHIND_EVERYTHING_IG_TOKEN: ${{ secrets.BEHIND_EVERYTHING_IG_TOKEN }}
+          BEHIND_EVERYTHING_YT_CLIENT_ID: ${{ secrets.BEHIND_EVERYTHING_YT_CLIENT_ID }}
+          BEHIND_EVERYTHING_YT_CLIENT_SECRET: ${{ secrets.BEHIND_EVERYTHING_YT_CLIENT_SECRET }}
+          BEHIND_EVERYTHING_YT_REFRESH_TOKEN: ${{ secrets.BEHIND_EVERYTHING_YT_REFRESH_TOKEN }}

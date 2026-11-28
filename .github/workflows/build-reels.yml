@@ -1,0 +1,75 @@
+name: Build reels
+# Turns new reel scripts in studio/videos/<id>/ (script.json + post.json, no BUILT marker) into finished
+# videos: Aman voice, animation render, music, watermark, cover. Then adds them to the posting queue.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['studio/videos/**/post.json']
+permissions:
+  contents: write
+concurrency:
+  group: build-reels
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Find reels to build
+        id: todo
+        run: |
+          ids=$(for d in studio/videos/*/; do [ -f "$d/post.json" ] && [ ! -f "$d/BUILT" ] && basename "$d"; done | tr '\n' ' ')
+          echo "ids=$ids" >> "$GITHUB_OUTPUT"; echo "To build: ${ids:-none}"
+      - uses: actions/setup-node@v4
+        if: steps.todo.outputs.ids != ''
+        with:
+          node-version: 20
+      - uses: actions/setup-python@v5
+        if: steps.todo.outputs.ids != ''
+        with:
+          python-version: '3.11'
+      - name: Cache voice model
+        if: steps.todo.outputs.ids != ''
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: indic-parler-tts-v1
+      - name: Install
+        if: steps.todo.outputs.ids != ''
+        working-directory: studio
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+          # torch and torchaudio must both be CPU builds of the same version, or torchaudio looks for CUDA (libcudart) and crashes
+          # sentencepiece pinned: newer versions need protobuf>=5.26, but audiotools/parler-tts cap protobuf below 5
+          pip install -q "torch==2.5.1" "torchaudio==2.5.1" --index-url https://download.pytorch.org/whl/cpu
+          pip install -q "transformers==4.46.1" parler-tts "sentencepiece==0.2.0" soundfile protobuf
+          pip install -q --force-reinstall --no-deps "torch==2.5.1" "torchaudio==2.5.1" --index-url https://download.pytorch.org/whl/cpu
+          python -c "import torch, torchaudio; print('torch', torch.__version__, 'torchaudio', torchaudio.__version__)"
+          npm ci --no-audit --no-fund
+      - name: Build
+        if: steps.todo.outputs.ids != ''
+        working-directory: studio
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: for v in ${{ steps.todo.outputs.ids }}; do ./build.sh "$v"; done
+      - name: Save to queue
+        if: steps.todo.outputs.ids != ''
+        run: |
+          git config user.name "autopost-bot"
+          git config user.email "autopost-bot@users.noreply.github.com"
+          git add queue/ studio/videos/
+          git commit -m "Built reels: ${{ steps.todo.outputs.ids }}"
+          for i in 1 2 3; do git pull --rebase origin main && git push && break; sleep 10; done
+      - name: Keep the finished videos as a download
+        if: steps.todo.outputs.ids != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: reels-${{ github.run_number }}
+          path: |
+            studio/build/out/*.mp4
+            studio/build/out/*_cover.jpg
+          retention-days: 30

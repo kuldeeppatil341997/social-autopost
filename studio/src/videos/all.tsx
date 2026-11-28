@@ -1,0 +1,12 @@
+import {barbarik} from './barbarik';
+import {eklavya} from './eklavya';
+import {ghatotkach} from './ghatotkach';
+import {ravan} from './ravan';
+import {shani} from './shani';
+import {abhimanyu, karna} from './batch2a';
+import {jatayu, shravan, nachiketa} from './batch2b';
+import {bhishma, balhanuman, balhanuman30} from './batch3';
+import {ashwatthama, iravan, kumbhakarna} from './batch4';
+import {amba, gandhari, sahadev, jarasandh, urmila} from './batch5';
+import {kaalbhairav, ekadashi, hanumanshani} from './auto-20261128';
+export const ALL = [barbarik, eklavya, ghatotkach, ravan, shani, abhimanyu, karna, jatayu, shravan, nachiketa, bhishma, balhanuman, balhanuman30, ashwatthama, iravan, kumbhakarna, amba, gandhari, sahadev, jarasandh, urmila, kaalbhairav, ekadashi, hanumanshani];

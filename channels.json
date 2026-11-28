@@ -1,0 +1,35 @@
+{
+  "_help": "One entry per channel. Secrets are GitHub Actions secret NAMES (not values). Set enabled=false to pause a channel; each platform has its own enabled flag.",
+  "kaalchitra": {
+    "enabled": true,
+    "instagram": {
+      "userIdSecret": "KAALCHITRA_IG_USER_ID",
+      "tokenSecret": "KAALCHITRA_IG_TOKEN"
+    },
+    "postsPerRun": 1,
+    "youtube": {
+      "enabled": true,
+      "clientIdSecret": "KAALCHITRA_YT_CLIENT_ID",
+      "clientSecretSecret": "KAALCHITRA_YT_CLIENT_SECRET",
+      "refreshTokenSecret": "KAALCHITRA_YT_REFRESH_TOKEN",
+      "privacy": "public",
+      "categoryId": 24
+    }
+  },
+  "behind-everything": {
+    "enabled": false,
+    "instagram": {
+      "userIdSecret": "BEHIND_EVERYTHING_IG_USER_ID",
+      "tokenSecret": "BEHIND_EVERYTHING_IG_TOKEN"
+    },
+    "postsPerRun": 1,
+    "youtube": {
+      "enabled": false,
+      "clientIdSecret": "BEHIND_EVERYTHING_YT_CLIENT_ID",
+      "clientSecretSecret": "BEHIND_EVERYTHING_YT_CLIENT_SECRET",
+      "refreshTokenSecret": "BEHIND_EVERYTHING_YT_REFRESH_TOKEN",
+      "privacy": "public",
+      "categoryId": 27
+    }
+  }
+}

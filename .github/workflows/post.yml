@@ -1,0 +1,59 @@
+name: Post reels
+on:
+  schedule:
+    - cron: '41 12 * * *'   # 6:11 PM IST backup. The main trigger is an outside timer at 6:00 PM (see README).
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: 'Only this channel (blank = all enabled)'
+        required: false
+      dry_run:
+        description: 'Dry run (do not post)'
+        type: boolean
+        default: false
+      force:
+        description: 'Post now, even outside the 6-9 PM IST window or if already posted today'
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: autopost
+  cancel-in-progress: false
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main   # latest main, so a delayed or repeated run sees the newest posted log (no double posts)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Post next reel per channel
+        env:
+          # Only the secrets the channels in channels.json use. Add a channel's secret names here too.
+          KAALCHITRA_IG_USER_ID: ${{ secrets.KAALCHITRA_IG_USER_ID }}
+          KAALCHITRA_IG_TOKEN: ${{ secrets.KAALCHITRA_IG_TOKEN }}
+          KAALCHITRA_YT_CLIENT_ID: ${{ secrets.KAALCHITRA_YT_CLIENT_ID }}
+          KAALCHITRA_YT_CLIENT_SECRET: ${{ secrets.KAALCHITRA_YT_CLIENT_SECRET }}
+          KAALCHITRA_YT_REFRESH_TOKEN: ${{ secrets.KAALCHITRA_YT_REFRESH_TOKEN }}
+          BEHIND_EVERYTHING_IG_USER_ID: ${{ secrets.BEHIND_EVERYTHING_IG_USER_ID }}
+          BEHIND_EVERYTHING_IG_TOKEN: ${{ secrets.BEHIND_EVERYTHING_IG_TOKEN }}
+          BEHIND_EVERYTHING_YT_CLIENT_ID: ${{ secrets.BEHIND_EVERYTHING_YT_CLIENT_ID }}
+          BEHIND_EVERYTHING_YT_CLIENT_SECRET: ${{ secrets.BEHIND_EVERYTHING_YT_CLIENT_SECRET }}
+          BEHIND_EVERYTHING_YT_REFRESH_TOKEN: ${{ secrets.BEHIND_EVERYTHING_YT_REFRESH_TOKEN }}
+          REPO: ${{ github.repository }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          FORCE: ${{ inputs.force || 'false' }}
+        run: |
+          export REPO_RAW_BASE="https://raw.githubusercontent.com/$REPO/$(git rev-parse HEAD)"
+          node scripts/post.mjs ${{ inputs.channel && format('--channel {0}', inputs.channel) || '' }}
+      - name: Save posted log
+        if: always()
+        run: |
+          git config user.name "autopost-bot"
+          git config user.email "autopost-bot@users.noreply.github.com"
+          git add state
+          git diff --cached --quiet || (git commit -m "Posted reels $(date -u +%F)" && git push)

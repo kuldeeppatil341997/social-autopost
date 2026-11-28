@@ -1,0 +1,35 @@
+name: Clean up posted reels
+on:
+  workflow_run:
+    workflows: ['Post reels']
+    types: [completed]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: autopost
+  cancel-in-progress: false
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Delete posted videos from the repo
+        id: rm
+        run: node scripts/cleanup.mjs | tee out.txt; echo "removed=$(grep -o 'REMOVED=[0-9]*' out.txt | cut -d= -f2)" >> "$GITHUB_OUTPUT"; rm out.txt
+      - name: Commit and squash history (keeps the repo small)
+        if: steps.rm.outputs.removed != '0'
+        run: |
+          git config user.name "autopost-bot"
+          git config user.email "autopost-bot@users.noreply.github.com"
+          base=$(git rev-parse HEAD)
+          git checkout --orphan fresh
+          git add -A
+          git commit -m "Queue snapshot $(date -u +%F) (posted reels removed)"
+          # Only replaces main if nothing new was pushed meanwhile (e.g. freshly built reels); otherwise the next cleanup squashes.
+          git push --force-with-lease=main:$base origin fresh:main || echo "main moved on; skipping squash this time"

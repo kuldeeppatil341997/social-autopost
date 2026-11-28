@@ -1,0 +1,2 @@
+[1]scale=300:-1,format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='alpha(X,Y)*0.22*if(lt(mod(T-2,15),3),clip(min(mod(T-2,15),3-mod(T-2,15))/0.4,0,1),0)'[w];
+[0][w]overlay=eval=frame:shortest=1:x='if(eq(mod(floor((t-2)/15),4),0),(W-w)/2,if(eq(mod(floor((t-2)/15),4),1),60,if(eq(mod(floor((t-2)/15),4),2),W-w-60,70)))':y='if(eq(mod(floor((t-2)/15),4),0),H-h-100,if(eq(mod(floor((t-2)/15),4),1),720,if(eq(mod(floor((t-2)/15),4),2),1020,H-h-100)))'
